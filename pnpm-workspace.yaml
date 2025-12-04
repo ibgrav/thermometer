@@ -1,0 +1,6 @@
+onlyBuiltDependencies:
+  - esbuild
+
+savePrefix: ""
+
+useNodeVersion: 24.11.1
