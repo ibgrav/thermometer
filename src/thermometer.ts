@@ -17,63 +17,63 @@ export type TQualifier = (event: TEvent) => boolean;
  *   - Could set default to Infinity or NaN, but that's not really accurate.
  *   - Best solution if this is truly an issue is to only call listener on second temp reading.
  * Future performance improvements:
- * - Add a map to cache the qualifier results
+ * - Add a map to cache the qualifier results.
  * - Use a WeakMap for listeners store to avoid memory leak if user does not call `removeEventListener`.
  *   - The issue is WeakMap is not currently iterable.
  * - Extend the `addEventListener` API to include passing static values instead of a qualifier method. This would allow sorting the listeners in some way at `addEventListener` instead of having to call a qualifier method at every temp read.
  *   - The current implementation sacrifices performance for API flexibility and implementation simplicity.
  */
 export class Thermometer {
-  private defaultUnit: TUnit;
-  private previousTemp: null | number = null;
-  private listeners: Map<TListener, TQualifier> = new Map();
+  #defaultUnit: TUnit;
+  #previousTemp: null | number = null;
+  #listeners: Map<TListener, TQualifier> = new Map();
 
   constructor(defaultUnit: TUnit) {
-    this.defaultUnit = defaultUnit;
+    this.#defaultUnit = defaultUnit;
   }
 
-  public addEventListener(qualifier: TQualifier, listener: TListener) {
-    this.listeners.set(listener, qualifier);
+  addEventListener(qualifier: TQualifier, listener: TListener) {
+    this.#listeners.set(listener, qualifier);
   }
 
-  public removeEventListener(listener: TListener) {
-    this.listeners.delete(listener);
+  removeEventListener(listener: TListener) {
+    this.#listeners.delete(listener);
   }
 
   /**
    * Give user the option to convert result to a non-default value
    */
-  public convertUnit(unit: TUnit, value: number) {
+  convertUnit(unit: TUnit, value: number) {
     if (unit === 'Celsius') return value;
-    return this.toFahrenheit(value);
+    return this.#toFahrenheit(value);
   }
 
-  public start(dataset: number[]) {
+  start(dataset: number[]) {
     /**
       This simulates polling for a temperature read.
       In a real application the dataset would not be supplied and `this.onTempRead` would be called after fetching the current temperature.
     */
     for (const data of dataset) {
-      this.onTempRead(data);
+      this.#onTempRead(data);
     }
   }
 
-  private toFahrenheit(value: number) {
+  #toFahrenheit(value: number) {
     return value * 1.8 + 32;
   }
 
   /**
    * Assumes temp value is Celsius as presented in example data
    */
-  private onTempRead(temp: number) {
-    for (const [listener, qualifier] of this.listeners) {
+  #onTempRead(temp: number) {
+    for (const [listener, qualifier] of this.#listeners) {
       const event: TEvent = {
-        current: this.convertUnit(this.defaultUnit, temp),
+        current: this.convertUnit(this.#defaultUnit, temp),
         previous: null
       };
 
-      if (this.previousTemp !== null) {
-        event.previous = this.convertUnit(this.defaultUnit, this.previousTemp);
+      if (this.#previousTemp !== null) {
+        event.previous = this.convertUnit(this.#defaultUnit, this.#previousTemp);
       }
 
       if (qualifier(event)) {
@@ -81,12 +81,11 @@ export class Thermometer {
       }
     }
 
-    this.previousTemp = temp;
+    this.#previousTemp = temp;
   }
 }
 
-// generally these tests would be in thermometer.test.ts
-// but for the sake of keeping the result a single file they are inline
+// Generally these tests would be in thermometer.test.ts, but for the sake of keeping the result a single file they are inline.
 if (import.meta.vitest) {
   const { describe, it, vi } = import.meta.vitest;
 
