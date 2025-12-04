@@ -149,5 +149,20 @@ if (import.meta.vitest) {
       expect(listener).toHaveBeenCalledTimes(1);
       expect(listener).toHaveBeenCalledWith({ current: -6, previous: 25 });
     });
+
+    it('adds and removes listener', ({ expect }) => {
+      const thermometer = new Thermometer('Celsius');
+      const listener: TListener = vi.fn();
+
+      thermometer.addEventListener(() => true, listener);
+      thermometer.start([0]);
+
+      expect(listener).toHaveBeenCalledTimes(1);
+
+      thermometer.removeEventListener(listener);
+      thermometer.start([0, 1, 2, 3]);
+
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
   });
 }
